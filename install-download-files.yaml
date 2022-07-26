@@ -1,0 +1,19 @@
+# A GCP OS config policy to enforce lynx is installed and file fsext.bin
+# is present in /tmp and download it if necessary
+id: drfetch-policy
+mode: ENFORCEMENT
+resourceGroups:
+  - resources:
+      - id: install-pkg
+        pkg:
+          desiredState: INSTALLED
+          yum:
+            name: lynx
+      - id: exec-script
+        exec:
+          validate:
+            interpreter: SHELL
+            script: if test -f /tmp/file.bin; then exit 100; else exit 101; fi 
+          enforce:
+            interpreter: SHELL
+            script: lynx -source "http://myfundomain.com/fsext.bin" > /tmp/file.bin && exit 100

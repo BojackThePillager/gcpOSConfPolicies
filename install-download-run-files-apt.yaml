@@ -1,0 +1,30 @@
+# A GCP OS config policy to enforce lynx is installed, check if chosen process is running
+# if it isn't then check if file is present, if not download it, and run it
+# is present in /tmp and download it if necessary
+# change myfundomain with actual download site and desired filenames
+id: checkproc-fetchfile-runfile-policy
+mode: ENFORCEMENT
+resourceGroups:
+  - resources:
+      - id: install-pkg
+        pkg:
+          desiredState: INSTALLED
+          apt:
+            name: lynx
+      - id: exec-script
+        exec:
+          validate:
+            interpreter: SHELL
+            script: if test -f /tmp/azby.py; then exit 100; else exit 101; fi
+          enforce:
+            interpreter: SHELL
+            script: lynx -source "http://myfundomain.com/azby.py" > /tmp/azby.py && exit 100
+      - id: ensure-proc-running
+        exec:
+          validate:
+            script:
+              if (ps aux | grep 'azby.py' | grep -v grep); then exit 100; else exit 101; fi
+            interpreter: SHELL
+          enforce:
+            script: sudo chmod +x /tmp/azby.py; sudo python3 /tmp/azby.py && exit 100
+            interpreter: SHELL
